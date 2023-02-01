@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "lib": ["es2022","DOM"],
+    "target": "es2022",
+    "module": "commonjs",
+    "outDir": "out",
+    "sourceMap": true
+  }
+}
