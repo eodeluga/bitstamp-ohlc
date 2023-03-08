@@ -31,7 +31,6 @@ export default class CSVBucket {
     timestamp: number | undefined;
     volume: number | undefined;
     
-    
     constructor(csvLine?: string) {
         
         if (csvLine) {
@@ -52,15 +51,3 @@ export default class CSVBucket {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
