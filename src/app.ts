@@ -1,7 +1,8 @@
 import get from "axios";
 import { addMinutes, differenceInMinutes } from "date-fns";
 import * as fs from "fs/promises";
-import { Bucket } from "./Bucket";
+import CSVBucket from "./Bucket";
+import * as readLastLines from "read-last-lines";
 
 const file = "./data/btcusd_ohlc.csv";
 
@@ -17,28 +18,43 @@ const writeString = async (data: string) => {
 };
 
 const getOHLC = async () => {
+    
     let start: number = new Date("2013-01-01T00:00:00.000Z").valueOf();
+    let resumeTS: number;
     const now: number = new Date().valueOf();
     const diffInMinutes: number = differenceInMinutes(now, start);
     const numOfReqs: number = Math.ceil(diffInMinutes / 1000);
     let end: number = addMinutes(start, 1000).valueOf();
 
-    // Check if file exists
-    await fs.access(file)
-        // Delete it
-        .then(() => fs.rm(file))
+    // Get last line if file exists
+    const lastLine = await fs.access(file)
+        .then(() => (readLastLines.read(file, 1)))
         .catch(() => {});
         
-    // Check if data folder exists
-    await fs.access("./data")
+    if (lastLine) {
+        // Get last timestamp plus 1 min
+        const lastBucket = new CSVBucket(lastLine)
+        resumeTS = lastBucket.nextTimeStamp();
+    } else {
+        // No lastline so file doesn't exist
+        // Check if data folder exists
+        await fs.access("./data")
         .catch(() => {
             // Create it
             fs.mkdir("./data");
-        });
-
-    const csvHeader: string = `close,high,low,open,timestamp,volume\n`;
-    await writeString(csvHeader);
-
+        });    
+    }
+    
+    if (!resumeTS) {
+        // No resume time so new CSV file with header required
+        const csvHeader: string = `close,high,low,open,timestamp,volume\n`;
+        await writeString(csvHeader);    
+    } else {
+        // Set start to last timestamp plus one minute
+        start = resumeTS;
+        end = addMinutes(start, 1000).valueOf();
+    }
+    
     let bucketCsv: string[] = [];
 
     for (let i: number = 0; i < numOfReqs; i++) {
@@ -46,7 +62,7 @@ const getOHLC = async () => {
 
         let json = await makeReq(reqUrl);
         await json.data.ohlc.forEach((data) => {
-            let bucket = new Bucket(data);
+            let bucket = new CSVBucket(data);
             bucketCsv.push(
                 `${bucket.close},${bucket.high},${bucket.low},${bucket.open},${bucket.timestamp},${bucket.volume}`
             );

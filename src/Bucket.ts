@@ -1,75 +1,55 @@
-let _close: string;
-let _low: string;
-let _open: string;
-let _timestamp: number;
-let _high: string;
+import { addMinutes } from "date-fns";
 
-export class Bucket {
+type Bucket = {
+    close: number | undefined;
+    high: number | undefined;
+    low: number | undefined;
+    open: number | undefined;
+    timestamp: number | undefined;
+    volume?: number | undefined;
+}
 
-    timestamp: string;
-    close: string;
-    high: string;
-    low: string;
-    open: string;
-    symbol: string;
-    volume: string;
+function fromCSVLine(csvLine: string): Bucket {
+    const [ close, high, low, open, timestamp, volume ] = csvLine.split(",");
+    const csvBucket: Bucket = {
+        close: +parseFloat(close).toFixed(2), 
+        high: +parseFloat(high).toFixed(2), 
+        low: +parseFloat(low).toFixed(2), 
+        open: +parseFloat(open).toFixed(2), 
+        timestamp: parseInt(timestamp),
+        volume: parseFloat(volume),
+    };
+    return csvBucket;
+}
+
+export default class CSVBucket {   
     
-    constructor({ close, high, low, open, ...args }) {
+    close: number | undefined;
+    high: number | undefined;
+    low: number | undefined;
+    open: number | undefined;
+    timestamp: number | undefined;
+    volume: number | undefined;
+    
+    
+    constructor(csvLine?: string) {
         
-        // Make floats fixed to two points
-        Object.defineProperty(this, 'close', {
-            set(closeVal) {
-                _close = parseFloat(closeVal).toFixed(2);
-            },
-            get() {
-                return _close;
-            }
-        });
-        
-        Object.defineProperty(this, 'high', {
-            set(highVal) {
-                _high = parseFloat(highVal).toFixed(2);
-            },
-            get() {
-                return _high;
-            }
-        }); 
-        
-        Object.defineProperty(this, 'low', {
-            set(lowVal) {
-                _low = parseFloat(lowVal).toFixed(2);
-            },
-            get() {
-                return _low;
-            }
-        }); 
-        
-        Object.defineProperty(this, 'open', {
-            set(openVal) {
-                _open = parseFloat(openVal).toFixed(2);
-            },
-            get() {
-                return _open;
-            }
-        });
-        
-        // Adds milliseconds to exchange timestamp so its correctly recognised by JS
-        Object.defineProperty(this, 'timestamp', {
-            set(tsVal) {
-                _timestamp = parseInt(tsVal) * 1000;
-            },
-            get() {
-                return _timestamp;
-            }
-        });
-        
-        this.close = close;
-        this.low = low;
-        this.open = open;
-        this.high = high;
-        this.volume = args?.volume;
-        this.timestamp = args?.timestamp;
-        this.symbol = args?.symbol;
+        if (csvLine) {
+            const { close, high, low, open, timestamp, volume } =  fromCSVLine(csvLine);
+            this.close = close;
+            this.high = high;
+            this.low = low;
+            this.open = open;
+            this.timestamp = timestamp;
+            this.volume = volume;            
+        }
+    }
+    
+    nextTimeStamp(): number | undefined {
+        if (this.timestamp) {
+            const nextTS = addMinutes(new Date(this.timestamp), 1);
+            return new Date(nextTS).valueOf();   
+        }
     }
 }
 

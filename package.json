@@ -4,18 +4,20 @@
   "description": "* Downloads BTCUSD minute timeframe OHLC data from the Bitstamp exchange as CSV *",
   "main": "./src/app.ts",
   "scripts": {
-    "test": "npm run build && mocha ./out/*.spec.js",
-    "build": "tsc",
-    "start": "node ./out/app.js"
+    "build": "npx tsc",
+    "start": "npx ts-node src/app.ts",
+    "test": "npm run build && mocha"
   },
   "author": "eodeluga",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.11.18",
+    "ts-node": "^10.9.1",
     "typescript": "^*"
   },
   "dependencies": {
     "axios": "^1.2.6",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.29.3",
+    "read-last-lines": "^1.8.0"
   }
 }
